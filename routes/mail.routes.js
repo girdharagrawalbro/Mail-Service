@@ -7,8 +7,17 @@ let transporter = null;
 
 function getTransporter() {
     if (!transporter) {
+        const host = process.env.EMAIL_HOST?.trim() || 'smtp.gmail.com';
+        const port = Number(process.env.EMAIL_PORT || 587);
+        const secure = process.env.EMAIL_SECURE
+            ? process.env.EMAIL_SECURE === 'true'
+            : port === 465;
+
         transporter = nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE || 'gmail',
+            service: process.env.EMAIL_SERVICE || undefined,
+            host,
+            port,
+            secure,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
@@ -18,6 +27,10 @@ function getTransporter() {
             maxMessages: 100,
             rateDelta: 1000,
             rateLimit: 5,
+            family: process.env.EMAIL_FORCE_IPV4 === 'false' ? undefined : 4,
+            connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 20000),
+            greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS || 20000),
+            socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 30000),
         });
     }
     return transporter;
